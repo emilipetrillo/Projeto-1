@@ -23,6 +23,28 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
+   if (topicStr == "Portao") {
+    // Switch on the LED if an 1 was received as first character
+
+    if (payload[0] == '1') {
+     // digitalWrite(LedLuz, LOW);   // Turn the LED on (Note that LOW is the voltage level
+      Serial.println("Abrir Portao");
+      acionaPortao(1);
+      // but actually the LED is on; this is because
+      // it is acive low on the ESP-01)
+    } else {
+    //  digitalWrite(LedLuz, HIGH);  // Turn the LED off by making the voltage HIGH
+      Serial.println("Fechar Portao");
+      acionaPortao(2);
+    }
+
+  }
+  else {
+    // Se o topico nao for Portao ele vira primeiro pra cá mas nao deve fazer nada.. para direto e ver o próximo if abaixo.
+    // Serial.println("Não funcionou");
+    // client.loop();
+  }
+  
 
   if (topicStr == "Luz") {
     // Switch on the LED if an 1 was received as first character
@@ -86,7 +108,7 @@ void loop()
 }
 
 void acionaPortao(int direcao) {
-  // Abrir Portao : direcao = ..
+  // Abrir Portao : direcao = 1
   
   if (direcao == 1) {
     // pos = 120;
@@ -99,7 +121,7 @@ void acionaPortao(int direcao) {
     }
     Serial.println("Portao Aberto");
   }
-  // Fechar Portao : direcao = ....
+  // Fechar Portao : direcao = 2
   else if (direcao == 2)  {
     //pos = 60;
     for (pos2 = pos; pos2 >= 0; pos2--) { // goes from 180 degrees to 0 degrees
