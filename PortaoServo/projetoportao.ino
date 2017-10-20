@@ -86,6 +86,8 @@ void loop()
 }
 
 void acionaPortao(int direcao) {
+  // Abrir Portao : direcao = ..
+  
   if (direcao == 1) {
     // pos = 120;
     for (pos = 0; pos <= 120; pos += 1) { // goes from 0 degrees to 180 degrees
@@ -97,6 +99,7 @@ void acionaPortao(int direcao) {
     }
     Serial.println("Portao Aberto");
   }
+  // Fechar Portao : direcao = ....
   else if (direcao == 2)  {
     //pos = 60;
     for (pos2 = pos; pos2 >= 0; pos2--) { // goes from 180 degrees to 0 degrees
