@@ -1,0 +1,72 @@
+const int pinLed = 8;
+const int btn = 13;
+int pressionadoAnterior;
+int ligado;
+int btnState = 0;
+int guardaState = 0;
+
+long previousMillis = 0;        // Variável de controle do tempo
+long redLedInterval = 3000;     // Tempo de espera para o próximo comando do botão 
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial) {}
+  //  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  Serial.println("Iniciando");
+  pinMode(pinLed, OUTPUT);
+  pinMode(btn, INPUT);
+}
+
+void loop() {
+  unsigned long currentMillis = millis();    //Tempo atual em ms
+  btnState = digitalRead(btn);
+  if (btnState == 1) {
+
+    if (currentMillis - previousMillis > redLedInterval) {
+      previousMillis = currentMillis;    // Salva o tempo atual
+      Led();
+      guardaState = guardaState + 1; // aqui começa o guardaState
+      // abrir();
+
+    }
+    else {
+      Serial.println("Aguarde");
+    }
+  }
+
+  else
+  {
+    // alguma mensagem ? acho que nao precisa deste else 
+  }
+  Serial.println(btnState);
+  Serial.flush();
+}
+
+
+void Led() {
+
+  Serial.print("btnStatus: ");
+  Serial.println(guardaState);
+  if (guardaState == 1) {
+    //ligado = 1 - ligado;
+    ligarLampada(1);
+  }
+  else {
+    desligarLampada(0);
+  }
+
+}
+
+void ligarLampada(int sim) {
+
+  digitalWrite(pinLed, HIGH);
+  guardaState = guardaState - 2;
+  // reportar o estado do led via MQTT
+}
+
+void desligarLampada(int nao) {
+
+  digitalWrite(pinLed, nao);
+  // reportar o estado do led via MQTT
+}
+
