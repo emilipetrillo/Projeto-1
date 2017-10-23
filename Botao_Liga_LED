@@ -6,7 +6,7 @@ int btnState = 0;
 int guardaState = 0;
 
 long previousMillis = 0;        // Variável de controle do tempo
-long redLedInterval = 3000;     // Tempo de espera para o próximo comando do botão 
+long redLedInterval = 0;     // Tempo de espera para o próximo comando do botão 
 
 void setup() {
   Serial.begin(9600);
@@ -24,10 +24,10 @@ void loop() {
 
     if (currentMillis - previousMillis > redLedInterval) {
       previousMillis = currentMillis;    // Salva o tempo atual
-      Led();
+       
+       Led();
       guardaState = guardaState + 1; // aqui começa o guardaState
       // abrir();
-
     }
     else {
       Serial.println("Aguarde");
@@ -40,7 +40,9 @@ void loop() {
   }
   Serial.println(btnState);
   Serial.flush();
+
 }
+
 
 
 void Led() {
@@ -61,6 +63,7 @@ void ligarLampada(int sim) {
 
   digitalWrite(pinLed, HIGH);
   guardaState = guardaState - 2;
+  redLedInterval = 3000; // define o tempo de intervalo que a lampada  ficara acesa até o proximo comando
   // reportar o estado do led via MQTT
 }
 
