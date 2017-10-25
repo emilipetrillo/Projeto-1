@@ -1,0 +1,289 @@
+#include <UIPEthernet.h>
+#include <utility/logging.h>
+#include <SPI.h>
+#include <PubSubClient.h>
+#include <Servo.h>
+Servo myservo;
+int pos;    // variable to store the servo position
+int pos2;
+const int pinoLed = 9;
+const int btnServo = 5;
+int pressionadoAnterior = 0;
+int pinoServo = 6;
+int ligado1 = 0;
+int ligado2;
+const int ledFeedback = 2;
+// Update these with values suitable for your network.
+byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0x11 };
+//IPAddress server(172, 16, 0, 2);
+
+const char* mqtt_server = "m13.cloudmqtt.com";
+void callback(char* topic, byte* payload, unsigned int length) {
+  String topicStr = String(topic);
+  Serial.print("Message arrived [");
+  Serial.print(topicStr);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+
+  if (topicStr == "Portao") {
+    if (payload[0] == '0') {
+      // digitalWrite(pinoLed, LOW);   // Turn the LED on (Note that LOW is the voltage level
+      acionaPortao(0);
+      Serial.println("Abrir Portao");
+      // but actually the LED is on; this is because
+      // it is acive low on the ESP-01)
+    } else {
+      //  digitalWrite(pinoLed, HIGH);  // Turn the LED off by making the voltage HIGH
+      Serial.println("Fechar Portao");
+      acionaPortao(1);
+    }
+  }
+
+  else {
+
+    // Se o topico nao for Portao ele vira primeiro pra cá mas nao deve fazer nada.. para direto e ver o próximo if abaixo.
+
+    Serial.println("Não funcionou nao leu o topico");
+    acionaPortao(1);
+
+    // client.loop();
+
+  }
+
+  if (topicStr == "Luz") {
+
+    // Switch on the LED if an 1 was received as first character
+
+    if (payload[0] == '0') {
+
+      digitalWrite(pinoLed, LOW);   // Turn the LED on
+
+      Serial.println("Desligado");
+
+    } else {
+
+      digitalWrite(pinoLed, HIGH);  // Turn the LED off
+
+      Serial.println("Ligado");
+
+    }
+
+  }
+
+  else {
+
+    Serial.println("Nao acionou o topico Luz");
+
+  }
+
+}
+
+EthernetClient ethClient;
+
+PubSubClient client(mqtt_server, 19927, callback, ethClient);
+
+void setup()
+
+{
+
+  Serial.begin(9600);
+
+  myservo.attach(pinoServo);
+
+  while (!Serial) {}
+
+  pinMode(pinoLed, OUTPUT);
+
+  pinMode(btnServo, INPUT);
+
+  if (!Ethernet.begin(mac)) {
+
+    Serial.println("DHCP Failed");
+
+  } else {
+
+    Serial.println(Ethernet.localIP());
+
+  }
+
+  if (client.connect("alsdkjflakj", "teste", "123")) {
+
+    Serial.println("Conectado");
+
+    Serial.flush();
+
+    //client.publish("Luz", "1111");
+
+    client.subscribe("Luz");
+
+    client.subscribe("Portao");
+
+    client.setCallback(callback);
+
+  } else {
+
+    Serial.println("Não Conectado");
+
+  }
+
+}
+
+void loop()
+
+{
+
+  int pressionado = digitalRead(btnServo);
+
+  // caso o botao nao estava pressionado no instante anterior
+
+  // && é o AND (E)
+
+  //Serial.println(pressionado);
+
+  if (pressionado && (pressionadoAnterior == LOW)) {
+
+    acionaPortao(ligado1);
+
+    // delay(1000);
+
+    ligado1 = 1 - ligado1;
+
+    digitalWrite(pinoLed, ligado1);
+
+  }
+
+  //digitalWrite(pinoLed, ligado1);
+
+  //acionaPortao(ligado1);
+
+  pressionadoAnterior = pressionado;
+
+ // if (!client.connected()) {
+
+   // reconnect();
+
+   // client.loop();
+
+ // }
+
+  client.loop();
+
+}
+
+void acionaPortao(int direcao) {
+
+  // Abrir Portao : direcao = 1
+
+  if (direcao == 0) {
+
+    for (pos = 1; pos < 100; pos += 1) {
+
+      myservo.write(pos);
+
+      Serial.println("Portao Abrindo");
+
+      Serial.flush();
+
+    }
+
+    ligado2 = ligado2 + 1;
+
+    Serial.println("Portao Aberto");
+
+    //client.publish("Portao", "1");
+
+  }
+
+  // Fechar Portao
+
+  else if (direcao == 1)  {
+
+    for (pos2 = 100; pos2 > 0; pos2--) {
+
+      myservo.write(pos2);
+
+      Serial.println("Portao Fechando");
+
+      Serial.flush();
+
+    }
+
+    ligado2 = ligado2 - 1;
+
+    Serial.println("Portao Fechado");
+
+    // client.publish("Portao", "0");
+
+  }
+
+}
+
+void reconnect() {
+
+  // Loop until we're reconnected
+
+  digitalWrite(ledFeedback, LOW);
+
+  while (!client.connected()) {
+
+    digitalWrite(ledFeedback, HIGH);
+
+    delay(100);
+
+    digitalWrite(ledFeedback, LOW);
+
+    delay(100);
+
+    digitalWrite(ledFeedback, HIGH);
+
+    delay(100);
+
+    digitalWrite(ledFeedback, LOW);
+
+    // delay(100);
+
+    Serial.print("Attempting MQTT connection...");
+
+    // Create a random client ID
+
+    String clientId = "EthernetClient-";
+
+    clientId += String(random(0xffff), HEX);
+
+    // Attempt to connect
+
+    if (client.connect("alsdkjflakj", "teste", "123")) {
+
+      Serial.println("Conectado");
+
+      Serial.flush();
+
+      //client.publish("Luz", "1111");
+
+      client.subscribe("Luz");
+
+      client.subscribe("Portao");
+
+      client.setCallback(callback);
+
+    } else {
+
+      Serial.print("failed, rc=");
+
+      Serial.print(client.state());
+
+      Serial.println("try again in 5 seconds");
+
+      // Wait 5 seconds before retrying
+
+      // delay(1000);
+
+      Serial.flush();
+
+    }
+
+  }
+
+}
